@@ -1,8 +1,6 @@
 from struct import pack, unpack
 from words import WordGraph, generate_rule
-from multiprocessing import Pool, cpu_count
 from tqdm import tqdm
-import itertools
 import os
 
 import rules
@@ -13,8 +11,6 @@ def read_to_set(path):
 
 def read_graph(path, active_rules=None):
     words, word_map = read_graph_words(os.path.join(path, "words.dat"))
-    #with Pool(processes=2) as pool:
-    #    adjacency_list = itertools.chain.from_iterable(tqdm(pool.imap_unordered(read_or_generate_graph_rule, [(path, rule, words, word_map) for rule in [rules.add_first_letter]]), total=len(rules.rules)))
     adjacency_list = []
     for rule in tqdm(rules.rules):
         adjacency_list += read_or_generate_graph_rule(path, rule, words, word_map)
@@ -25,7 +21,7 @@ def read_or_generate_graph_rule(path, rule, words, word_map):
     if os.path.isfile(rule_path):
         return read_graph_rule(rule_path, words, rule)
     else:
-        generated = generate_rule(words, rule)
+        generated = list(generate_rule(words, rule))
         write_graph_rule(rule_path, rule, word_map, generated)
         return generated
 

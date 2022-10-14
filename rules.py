@@ -69,6 +69,22 @@ def add_letter(s1, s2, len_s1, len_s2):
                 return None
     return index
 
+def remove_first_letter(s1, s2, len_s1, len_s2):
+    if len_s1 != len_s2 + 1:
+        return None
+    for i in range(len_s2):
+        if s1[i + 1] != s2[i]:
+            return None
+    return True
+
+def remove_last_letter(s1, s2, len_s1, len_s2):
+    if len_s1 != len_s2 + 1:
+        return None
+    for i in range(len_s2):
+        if s1[i] != s2[i]:
+            return None
+    return True
+
 def remove_letter(s1, s2, len_s1, len_s2):
     if len_s1 != len_s2 + 1:
         return None
@@ -90,5 +106,7 @@ rules = {
     add_first_letter: None,
     add_last_letter: None,
     add_letter: int,
+    remove_first_letter: None,
+    remove_last_letter: None,
     remove_letter: int
 }

@@ -1,5 +1,4 @@
 from networkx import MultiDiGraph, all_shortest_paths, NetworkXNoPath
-from tqdm import tqdm
 
 import rules
 
@@ -56,13 +55,11 @@ class WordGraph:
         return min((self.active_rules[rule["rule"]] for rule in rules.values() if rule["rule"] in self.active_rules), default=None)
 
 def generate_rule(words, rule):
-    adjacency_list = []
-    for w1 in tqdm(words, miniters=10, desc=rule.__name__):
+    for w1 in words:
         len_w1 = len(w1)
         for w2 in words:
             if w1 != w2:
                 len_w2 = len(w2)
                 match = rule(w1, w2, len_w1, len_w2)
                 if match != None:
-                    adjacency_list.append((w1, w2, {"rule": rule, "match": match}))
-    return adjacency_list
+                    yield (w1, w2, {"rule": rule, "match": match})

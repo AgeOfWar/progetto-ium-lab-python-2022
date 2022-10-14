@@ -1,9 +1,7 @@
 from sys import argv, stderr
-from numpy import array
 import shutil
 
 from files import *
-import rules
 
 config_path = "config"
 configurations_path = os.path.join(config_path, "configurations")
@@ -20,7 +18,9 @@ def main():
     graph = read_graph(os.path.join(configurations_path, configuration))
     word = input("> ").strip()
     while word != "exit":
-        if '-' in word:
+        if word == '':
+            pass
+        elif '-' in word:
             w1, w2 = word.split("-")
             c = 0
             for path in graph.find_paths(w1, w2):
