@@ -1,5 +1,8 @@
 from networkx import MultiDiGraph, all_shortest_paths, NetworkXNoPath
+import os
 
+from dictionaries import *
+from files import *
 import rules
 
 class WordGraph:
@@ -63,3 +66,43 @@ def generate_rule(words, rule):
                 match = rule(w1, w2, len_w1, len_w2)
                 if match != None:
                     yield (w1, w2, {"rule": rule, "match": match})
+
+def read_or_create_graph(name, active_rules=None):
+    words, word_map = read_dictionary(name)
+    adjacency_list = []
+    for rule in rules.rules:
+        adjacency_list += read_or_create_graph_rule(name, rule, words, word_map)
+    return WordGraph(words, adjacency_list, active_rules)
+
+def read_or_create_graph_rule(name, rule, words, word_map):
+    if os.path.isfile(dictionary_path(name, rule.__name__ + ".dat")):
+        return read_graph_rule(name, rule, words)
+    else:
+        generated = list(generate_rule(words, rule))
+        write_graph_rule(name, rule, word_map, generated)
+        return generated
+
+def read_graph_rule(name, rule, words):
+    adjacency_list = []
+    with open(dictionary_path(name, rule.__name__ + ".dat"), "rb") as file:
+        adjacency_list_len = unpack_int(file)
+        for _ in range(adjacency_list_len):
+            w1 = words[unpack_int(file)]
+            w2 = words[unpack_int(file)]
+            match_type = rules.rules[rule]
+            if match_type == int:
+                adjacency_list.append((w1, w2, {"rule": rule, "match": unpack_int(file)}))
+            elif match_type == None:
+                adjacency_list.append((w1, w2, {"rule": rule, "match": True}))
+    return adjacency_list
+
+def write_graph_rule(name, rule, word_map, adjacency_list):
+    with open(dictionary_path(name, rule.__name__ + ".dat"), "wb") as file:
+        file.write(pack_int(len(adjacency_list)))
+        for source, target, attributes in adjacency_list:
+            file.write(pack_int(word_map[source]))
+            file.write(pack_int(word_map[target]))
+            match = attributes["match"]
+            match_type = rules.rules[rule]
+            if match_type == int:
+                file.write(pack_int(match))
