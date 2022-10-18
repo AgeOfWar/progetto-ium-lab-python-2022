@@ -1,6 +1,16 @@
 def anagram(s1, s2, len_s1, len_s2):
     if len_s1 != len_s2:
         return None
+
+    # optimization
+    sum = 0
+    for i in range(len_s1):
+        sum += ord(s1[i])
+        sum -= ord(s2[i])
+    if sum != 0:
+        return None
+    # optimization
+
     chars = {}
     for i in range(len_s1):
         c1 = s1[i]
