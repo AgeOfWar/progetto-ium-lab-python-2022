@@ -57,36 +57,54 @@ class WordGraph:
     def _calculate_weight(self, w1, w2, rules):
         return min((self.active_rules[rule["rule"]] for rule in rules.values() if rule["rule"] in self.active_rules), default=None)
 
-def generate_rule(words, rule):
+def generate_rule(words, rule, detail_progress, stop_event):
+    detail_progress.request_reset()
+    detail_progress.request_set_maximum(len(words))
     for w1 in words:
+        detail_progress.request_set_description(w1 + " ")
         len_w1 = len(w1)
         for w2 in words:
+            if stop_event.is_set():
+                return
             if w1 != w2:
                 len_w2 = len(w2)
                 match = rule(w1, w2, len_w1, len_w2)
                 if match != None:
                     yield (w1, w2, {"rule": rule, "match": match})
+        detail_progress.request_progress()
 
-def read_or_create_graph(name, active_rules=None):
+def read_or_create_graph(name, progress, detail_progress, stop_event, active_rules=None):
     words, word_map = read_dictionary(name)
     adjacency_list = []
+    progress.request_set_maximum(len(rules.rules))
     for rule in rules.rules:
-        adjacency_list += read_or_create_graph_rule(name, rule, words, word_map)
+        if stop_event.is_set():
+            return
+        progress.request_set_description(rule.__name__ + " ")
+        adjacency_list += read_or_create_graph_rule(name, rule, words, word_map, detail_progress, stop_event)
+        progress.request_progress()
     return WordGraph(words, adjacency_list, active_rules)
 
-def read_or_create_graph_rule(name, rule, words, word_map):
+def read_or_create_graph_rule(name, rule, words, word_map, detail_progress, stop_event):
     if os.path.isfile(dictionary_path(name, rule.__name__ + ".dat")):
-        return read_graph_rule(name, rule, words)
+        return read_graph_rule(name, rule, words, detail_progress, stop_event)
     else:
-        generated = list(generate_rule(words, rule))
+        generated = list(generate_rule(words, rule, detail_progress, stop_event))
+        if stop_event.is_set():
+            return []
         write_graph_rule(name, rule, word_map, generated)
         return generated
 
-def read_graph_rule(name, rule, words):
+def read_graph_rule(name, rule, words, detail_progress, stop_event):
     adjacency_list = []
     with open(dictionary_path(name, rule.__name__ + ".dat"), "rb") as file:
         adjacency_list_len = unpack_int(file)
+        detail_progress.request_reset()
+        detail_progress.request_set_maximum(adjacency_list_len)
+        detail_progress.request_set_description(rule.__name__ + ".dat ")
         for _ in range(adjacency_list_len):
+            if stop_event.is_set():
+                return []
             w1 = words[unpack_int(file)]
             w2 = words[unpack_int(file)]
             match_type = rules.rules[rule]
@@ -94,6 +112,7 @@ def read_graph_rule(name, rule, words):
                 adjacency_list.append((w1, w2, {"rule": rule, "match": unpack_int(file)}))
             elif match_type == None:
                 adjacency_list.append((w1, w2, {"rule": rule, "match": True}))
+            detail_progress.request_progress()
     return adjacency_list
 
 def write_graph_rule(name, rule, word_map, adjacency_list):
