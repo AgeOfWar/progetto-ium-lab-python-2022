@@ -1,11 +1,18 @@
 def anagram(s1, s2, len_s1, len_s2):
     if len_s1 != len_s2:
         return None
-    chars = dict.fromkeys(s1 + s2, 0)
-    for c in s1:
-        chars[c] += 1
-    for c in s2:
-        chars[c] -= 1
+    chars = {}
+    for i in range(len_s1):
+        c1 = s1[i]
+        c2 = s2[i]
+        if c1 in chars:
+            chars[c1] += 1
+        else:
+            chars[c1] = 1
+        if c2 in chars:
+            chars[c2] -= 1
+        else:
+            chars[c2] = -1
     return None if any(chars.values()) else True
 
 def change_letter(s1, s2, len_s1, len_s2):
