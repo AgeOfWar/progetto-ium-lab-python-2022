@@ -7,13 +7,15 @@ class Window(Tk):
         super().__init__()
         self.title(title)
         self.threads = []
-        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
-    def _on_close(self):
+    def stop_threads(self):
         for thread in self.threads:
             if thread.is_alive():
                 thread.stop()
-        self.destroy()
+
+    def destroy(self):
+        self.stop_threads()
+        super().destroy()
 
     class Thread(threading.Thread):
         def __init__(self, window, target):
@@ -29,12 +31,19 @@ class Window(Tk):
         def stop(self):
             self.stop_event.set()
 
+class Label(Label):
+    def __init__(self, parent, text, fontsize=10):
+        super().__init__(parent, text=text, font=("Montserrat", fontsize))
 
-class Label(ttk.Label):
-    def __init__(self, parent, text, font_size=10):
-        super().__init__(parent, text=text, font=("Montserrat", font_size))
+class Button(Button):
+    def __init__(self, parent, text, command=None, fontsize=10, width=12):
+        super().__init__(parent, text=text, command=command, width=width, font=("Montserrat", fontsize), cursor="hand2")
 
-class ScrollbarFrame(ttk.Frame):
+class Treeview(ttk.Treeview):
+    def __init__(self, parent, columns):
+        super().__init__(parent, columns=columns, show="headings", cursor="arrow", selectmode=BROWSE)
+
+class ScrollbarFrame(Frame):
     def __init__(self, parent, widget_init):
         super().__init__(parent)
         widget = widget_init(self)
@@ -52,11 +61,24 @@ class ScrollbarFrame(ttk.Frame):
             self.scrollbar.pack(side=LEFT, fill=Y)
         self.scrollbar.set(lo, hi)
 
-class ProgressBar(ttk.Frame):
+class CheckBox(Checkbutton):
+    def __init__(self, parent, text, selected=False):
+        self.value = selected
+        super().__init__(parent, text=text, command=self.on_switch, cursor="hand2")
+        if selected:
+            self.select()
+
+    def on_switch(self):
+        self.value = False if self.value else True
+
+    def get(self):
+        return self.value
+
+class ProgressBar(Frame):
     def __init__(self, parent, function=None, on_complete=None, description=""):
         super().__init__(parent)
         progress = ttk.Progressbar(self, maximum=1)
-        description_label = Label(self, description, font_size=8)
+        description_label = Label(self, description, fontsize=8)
         progress.pack(anchor=W, fill=X, pady=5)
         description_label.pack(anchor=W)
         self.progress = progress
@@ -96,6 +118,7 @@ class ProgressBar(ttk.Frame):
 
 def clear_window(widget):
     window = widget.winfo_toplevel()
+    window.unbind("<Button-1>")
     for child in window.winfo_children():
         child.destroy()
     return window

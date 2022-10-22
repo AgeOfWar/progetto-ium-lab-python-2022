@@ -4,7 +4,7 @@ from view.widgets import *
 def setup_window(window, dictionary, graph):
     window.title("Parole - " + dictionary)
     window.geometry("540x360")
-    window.minsize(420, 180)
+    window.minsize(420, 300)
     WordGraphFrame(window, dictionary, graph).pack(fill=BOTH, expand=True, padx=10, pady=10)
 
 class WordGraphFrame(ttk.Frame):

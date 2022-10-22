@@ -10,25 +10,28 @@ from dictionaries import *
 def setup_window(window):
     window.title("Parole - Scelta dizionario")
     window.geometry("540x360")
-    window.minsize(420, 180)
+    window.minsize(420, 300)
     DictionaryManager(window).pack(fill=BOTH, expand=True, padx=10, pady=10)
 
-class DictionaryManager(ttk.Frame):
+class DictionaryManager(Frame):
     def __init__(self, parent):
         super().__init__(parent)
         Label(self, "Scegli il dizionario o creane uno nuovo.").pack(anchor=W)
-        DictionariesView(self).pack(fill=BOTH, expand=True)
+        check_button = CheckBox(self, "ricorda la scelta", selected=True)
+        DictionariesView(self, check_button).pack(fill=BOTH, expand=True)
+        check_button.pack(anchor=W)
 
-class DictionariesView(ttk.Frame):
-    def __init__(self, parent):
+class DictionariesView(Frame):
+    def __init__(self, parent, remember_choice):
         super().__init__(parent)
-        dictionaries = ScrollbarFrame(self, Dictionaries)
+        dictionaries = ScrollbarFrame(self, lambda parent: Dictionaries(parent, remember_choice))
         dictionaries.pack(side=LEFT, fill=BOTH, expand=True, padx=(0, 5))
         Actions(self, dictionaries.widget).pack(side=LEFT, fill=Y, padx=(5, 0))
 
-class Dictionaries(ttk.Treeview):
-    def __init__(self, parent):
-        super().__init__(parent, columns=("name", "word_count"), show="headings", cursor="arrow", selectmode=BROWSE)
+class Dictionaries(Treeview):
+    def __init__(self, parent, remember_choice):
+        self.remember_choice = remember_choice
+        super().__init__(parent, columns=("name", "word_count"))
         self.heading("name", text="Nome", anchor=W)
         self.heading("word_count", text="Parole", anchor=W)
         self.column("name", stretch=YES, anchor=W)
@@ -40,6 +43,8 @@ class Dictionaries(ttk.Treeview):
         self.bind("<Motion>", self._no_stretch)
         self.bind("<Button-3>", self.options)
         self.bind("<Double-1>", self.on_item_selection)
+        self.bind("<Return>", self.on_item_selection)
+        self.winfo_toplevel().bind("<Button-1>", self._deselect_all)
 
     def on_item_selection(self, event):
         item = self.identify_row(event.y)
@@ -89,6 +94,7 @@ class Dictionaries(ttk.Treeview):
             self.item(item, values=(name, len(words)))
             self.selection_set(item)
         except FileExistsError:
+            print("WHAT")
             self.delete(item)
             messagebox.showerror("Impossibile creare", "Il nome '" + name + "' è già in uso.")
 
@@ -97,10 +103,16 @@ class Dictionaries(ttk.Treeview):
             self.config(cursor="arrow")
             return "break"
 
-class Actions(ttk.Frame):
+    def _deselect_all(self, event):
+        item = self.identify_element(event.x, event.y)
+        if not item:
+            if len(self.selection()) > 0:
+                self.selection_remove(self.selection()[0])
+
+class Actions(Frame):
     def __init__(self, parent, dictionaries):
         super().__init__(parent)
-        Button(self, text="Crea", width = 12, command=self.on_new).pack()
+        Button(self, "CREA", command=self.on_new).pack()
         self.dictionaries = dictionaries
 
     def on_new(self):
@@ -114,26 +126,42 @@ class Actions(ttk.Frame):
         words = parse_dictionary(path)
         new_item = self.dictionaries.insert("", END, values=("", len(words)))
         x, y, width, height = self.dictionaries.bbox(new_item, 0)
-        entry = EntryPopup(self, "", lambda new_name: self.dictionaries.add(new_item, new_name, words))
+        entry = EntryPopup(self.dictionaries, "", lambda new_name: self.new_dictionary(new_name, new_item, words), on_cancel=lambda: self.dictionaries.delete(new_item))
         entry.place(x=x, y=y+height//2, width=width, height=height, anchor=W)
+    
+    def new_dictionary(self, new_name, new_item, words):
+        if len(new_name.strip()) == 0:
+            self.dictionaries.delete(new_item)
+            return
+        self.dictionaries.add(new_item, new_name, words)
+
 
 class EntryPopup(Entry):
-    def __init__(self, parent, text, on_submit):
+    def __init__(self, parent, text, on_submit, on_cancel=None):
         super().__init__(parent)
-        self.on_submit = on_submit
+        self.done = False
+        self._on_submit = on_submit
+        self._on_cancel = on_cancel
         self.insert(0, text) 
         self["exportselection"] = False
 
         self.focus_force()
         self.bind("<Return>", self.on_return)
         self.bind("<Control-a>", self.select_all)
-        self.bind("<Escape>", lambda _: self.destroy())
-        self.bind("<FocusOut>", lambda _: self.destroy())
+        self.bind("<Escape>", self.on_cancel)
+        self.bind("<FocusOut>", self.on_cancel)
 
     def on_return(self, _):
-        self.on_submit(self.get())
+        self.done = True
+        self._on_submit(self.get())
         self.destroy()
 
     def select_all(self, _):
         self.selection_range(0, END)
         return "break"
+
+    def on_cancel(self, _):
+        if not self.done:
+            self.destroy()
+            if self._on_cancel != None:
+                self._on_cancel()
