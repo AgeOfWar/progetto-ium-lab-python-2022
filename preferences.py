@@ -19,5 +19,5 @@ def write_preferences(start_dictionary=None):
         "start_dictionary": start_dictionary
     }
     with open(PREFERENCES_PATH, "w") as file:
-        json.dump(preferences, file)
+        json.dump(preferences, file, indent=2)
     return preferences
