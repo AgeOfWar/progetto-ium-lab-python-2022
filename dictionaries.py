@@ -2,13 +2,13 @@ import os
 
 from files import *
 
-dictionaries_path = os.path.join("config", "dictionaries")
+DICTIONARIES_PATH = os.path.join("config", "dictionaries")
 
 def dictionary_path(name, *paths):
-    return os.path.join(dictionaries_path, name, *paths)
+    return os.path.join(DICTIONARIES_PATH, name, *paths)
 
 def find_dictionaries():
-    for name in os.listdir(dictionaries_path):
+    for name in os.listdir(DICTIONARIES_PATH):
         if os.path.isdir(dictionary_path(name)):
             words_path = dictionary_path(name, "words.dat")
             if os.path.isfile(words_path):
@@ -26,7 +26,7 @@ def parse_dictionary(path):
     return sorted(read_to_set(path))
 
 def create_dictionary(name, words):
-    os.makedirs(dictionary_path(name))
+    os.makedirs(dictionary_path(name), exist_ok=True)
     with open(dictionary_path(name, "words.dat"), "wb") as file:
         file.write(pack_int(len(words)))
         for word in words:
@@ -43,3 +43,6 @@ def read_dictionary(name):
             words.append(word)
             word_map[word] = i
     return words, word_map
+
+def exists_dictionary(name):
+    return os.path.isfile(dictionary_path(name, "words.dat"))

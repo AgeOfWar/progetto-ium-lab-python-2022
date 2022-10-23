@@ -4,6 +4,7 @@ from view.widgets import *
 from view import word_graph_widget, dictionaries_widget
 
 from word_graph import read_or_create_graph
+from preferences import write_preferences
 
 def setup_window(window, dictionary):
     window.title("Parole - Caricamento regole " + dictionary)
@@ -26,5 +27,7 @@ class LoadingFrame(Frame):
     def back(self):
         window = clear_window(self)
         window.stop_threads()
+        write_preferences(start_dictionary=None)
         dictionaries_widget.setup_window(window)
+
         

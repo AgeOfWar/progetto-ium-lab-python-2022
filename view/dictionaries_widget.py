@@ -6,6 +6,7 @@ from view.widgets import *
 from view import dictionary_loading_widget
 
 from dictionaries import *
+from preferences import write_preferences
 
 def setup_window(window):
     window.title("Parole - Scelta dizionario")
@@ -67,6 +68,10 @@ class Dictionaries(Treeview):
 
     def context_menu_choice(self, item):
         name, _ = self.item(item)["values"]
+        if self.remember_choice:
+            write_preferences(start_dictionary=name)
+        else:
+            write_preferences(start_dictionary=None)
         dictionary_loading_widget.setup_window(clear_window(self), name)
 
     def context_menu_delete(self, item):
@@ -94,7 +99,6 @@ class Dictionaries(Treeview):
             self.item(item, values=(name, len(words)))
             self.selection_set(item)
         except FileExistsError:
-            print("WHAT")
             self.delete(item)
             messagebox.showerror("Impossibile creare", "Il nome '" + name + "' è già in uso.")
 
