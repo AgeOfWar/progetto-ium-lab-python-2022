@@ -130,22 +130,24 @@ class Actions(Frame):
         words = parse_dictionary(path)
         new_item = self.dictionaries.insert("", END, values=("", len(words)))
         x, y, width, height = self.dictionaries.bbox(new_item, 0)
-        entry = EntryPopup(self.dictionaries, "", lambda new_name: self.new_dictionary(new_name, new_item, words), on_cancel=lambda: self.dictionaries.delete(new_item))
+        entry = EntryPopup(self.dictionaries, file_name(path), lambda new_name: self.dictionaries.add(new_item, new_name, words), on_cancel=lambda: self.dictionaries.delete(new_item), validator=self._dictionary_name_validator)
         entry.place(x=x, y=y+height//2, width=width, height=height, anchor=W)
-    
-    def new_dictionary(self, new_name, new_item, words):
-        if len(new_name.strip()) == 0:
-            self.dictionaries.delete(new_item)
-            return
-        self.dictionaries.add(new_item, new_name, words)
+
+    def _dictionary_name_validator(self, name):
+        stripped_name = name.strip()
+        if len(stripped_name) != 0 and not exists_dictionary(stripped_name):
+            return stripped_name
+        return None
+        
 
 
 class EntryPopup(Entry):
-    def __init__(self, parent, text, on_submit, on_cancel=None):
+    def __init__(self, parent, text, on_submit, on_cancel=None, validator=None):
         super().__init__(parent)
         self.done = False
         self._on_submit = on_submit
         self._on_cancel = on_cancel
+        self._validator = validator
         self.insert(0, text) 
         self["exportselection"] = False
 
@@ -156,9 +158,16 @@ class EntryPopup(Entry):
         self.bind("<FocusOut>", self.on_cancel)
 
     def on_return(self, _):
-        self.done = True
-        self._on_submit(self.get())
-        self.destroy()
+        if self._validator == None:
+            self.done = True
+            self._on_submit(self.get())
+            self.destroy()
+        else:
+            validated = self._validator(self.get())
+            if validated:
+                self.done = True
+                self._on_submit(self.get() if validated == True else validated)
+                self.destroy()
 
     def select_all(self, _):
         self.selection_range(0, END)

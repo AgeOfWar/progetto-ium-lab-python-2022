@@ -1,5 +1,6 @@
 from struct import pack, unpack
 import shutil
+import os
 
 def read_to_set(path):
     with open(path, "r") as file:
@@ -7,6 +8,9 @@ def read_to_set(path):
 
 def rmtree(path):
     shutil.rmtree(path, ignore_errors=True)
+
+def file_name(path):
+    return os.path.splitext(os.path.basename(path))[0]
 
 def unpack_string(file):
     buffer = file.read(1)
