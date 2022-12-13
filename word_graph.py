@@ -1,5 +1,6 @@
 from networkx import MultiDiGraph, all_shortest_paths, NetworkXNoPath
 import os
+import random
 
 from dictionaries import *
 from files import *
@@ -45,7 +46,7 @@ class WordGraph:
             self.add_word(w2)
         try:
             paths = all_shortest_paths(self.graph, w1, w2, weight=self._calculate_weight)
-            paths = list(paths)
+            paths = list((path, [self.get_rule(w1, w2) for (w1, w2) in zip(path, path[1:])]) for path in paths)
         except NetworkXNoPath:
             paths = []
         if add_w1 and not remember_new:
@@ -56,6 +57,13 @@ class WordGraph:
 
     def _calculate_weight(self, w1, w2, rules):
         return min((self.active_rules[rule["rule"]] for rule in rules.values() if rule["rule"] in self.active_rules), default=None)
+
+    def get_rule(self, w1, w2):
+        rules = self.graph.get_edge_data(w1, w2)
+        return min((rule for rule in rules.values() if rule["rule"] in self.active_rules), key=lambda r: self.active_rules[r["rule"]], default=None)
+
+    def random_word(self):
+        return random.choice(list(self.graph.nodes))
 
 def generate_rule(words, rule, detail_progress, stop_event):
     detail_progress.request_reset()

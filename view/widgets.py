@@ -32,12 +32,42 @@ class Window(Tk):
             self.stop_event.set()
 
 class Label(Label):
-    def __init__(self, parent, text, fontsize=10):
-        super().__init__(parent, text=text, font=("Montserrat", fontsize))
+    def __init__(self, parent, text, fontsize=10, wraptext=False, cursor=None, color=None):
+        super().__init__(parent, text=text, font=("Montserrat", fontsize), cursor=cursor, fg=color)
+        if wraptext:
+            self.bind("<Configure>", lambda _: self.config(wraplength=self.winfo_width()))
+    
+    def set_text(self, new_text):
+        self.config(text=new_text)
+
+class TextArea(Text):
+    def __init__(self, parent, text, fontsize=10, cursor=None):
+        super().__init__(parent, font=("Montserrat", fontsize), cursor=cursor, wrap=WORD)
+        self["height"] = 5
+        if text:
+            self.insert(END, text)
+        self.config(state=DISABLED)
+    
+    def set_text(self, new_text):
+        self.config(state=NORMAL)
+        self.delete(1.0, END)
+        self.insert(END, new_text)
+        self.config(state=DISABLED)
+
+    def get_index(self, x, y):
+        i = self.count("1.0", "@%d,%d" % (x, y))
+        if i == None:
+            return 0
+        else:
+            return i[0]
 
 class Button(Button):
-    def __init__(self, parent, text, command=None, fontsize=10, width=12):
-        super().__init__(parent, text=text, command=command, width=width, font=("Montserrat", fontsize), cursor="hand2")
+    def __init__(self, parent, text, command=None, fontsize=10, width=12, height=None, on_tab=None, image=None):
+        super().__init__(parent, text=text, command=command, width=width, height=height, font=("Montserrat", fontsize), cursor="hand2", image=image)
+        self._command = command
+        self.bind("<Return>", lambda _: command())
+        if on_tab:
+            self.bind("<Tab>", on_tab)
 
 class Treeview(ttk.Treeview):
     def __init__(self, parent, columns):
@@ -63,8 +93,8 @@ class ScrollbarFrame(Frame):
 
 class CheckBox(Checkbutton):
     def __init__(self, parent, text, selected=False):
-        self.value = selected
         super().__init__(parent, text=text, command=self.on_switch, cursor="hand2")
+        self.value = selected
         if selected:
             self.select()
 
@@ -73,6 +103,28 @@ class CheckBox(Checkbutton):
 
     def get(self):
         return self.value
+
+class TextField(Text):
+    def __init__(self, parent, text=None, width=None, on_tab=None):
+        super().__init__(parent)
+        self["height"] = 1
+        if width:
+            self["width"] = width
+        if on_tab:
+            self.bind("<Tab>", on_tab)
+        if text:
+            self.insert(END, text)
+    
+    def set_text(self, new_text):
+        self.delete(1.0, END)
+        self.insert(END, new_text)
+
+    def get(self):
+        return super().get("1.0","end-1c")
+
+    def focus(self):
+        super().focus()
+        self.tag_add(SEL, "1.0", END)
 
 class ProgressBar(Frame):
     def __init__(self, parent, function=None, on_complete=None, description=""):
@@ -116,8 +168,13 @@ class ProgressBar(Frame):
     def finish(self):
         self.result_wrapper.append(None)
 
+def focus(widget):
+    widget.focus()
+    return "break"
+
 def clear_window(widget):
     window = widget.winfo_toplevel()
+    window.stop_threads()
     window.unbind("<Button-1>")
     for child in window.winfo_children():
         child.destroy()

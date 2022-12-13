@@ -10,8 +10,8 @@ from preferences import write_preferences
 
 def setup_window(window):
     window.title("Parole - Scelta dizionario")
-    window.geometry("540x360")
-    window.minsize(420, 300)
+    window.geometry("600x400")
+    window.minsize(600, 400)
     DictionaryManager(window).pack(fill=BOTH, expand=True, padx=10, pady=10)
 
 class DictionaryManager(Frame):
