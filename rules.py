@@ -1,29 +1,3 @@
-def anagram(s1, s2, len_s1, len_s2):
-    if len_s1 != len_s2:
-        return None
-
-    # huge optimization
-    sum = 0
-    for i in range(len_s1):
-        sum += ord(s1[i])
-        sum -= ord(s2[i])
-    if sum != 0:
-        return None
-
-    chars = {}
-    for i in range(len_s1):
-        c1 = s1[i]
-        c2 = s2[i]
-        if c1 in chars:
-            chars[c1] += 1
-        else:
-            chars[c1] = 1
-        if c2 in chars:
-            chars[c2] -= 1
-        else:
-            chars[c2] = -1
-    return None if any(chars.values()) else True
-
 def change_letter(s1, s2, len_s1, len_s2):
     if len_s1 != len_s2:
         return None
@@ -114,8 +88,52 @@ def remove_letter(s1, s2, len_s1, len_s2):
                 return None
     return index
 
+def anagram(s1, s2, len_s1, len_s2):
+    if len_s1 != len_s2:
+        return None
+
+    # huge optimization
+    sum = 0
+    for i in range(len_s1):
+        sum += ord(s1[i])
+        sum -= ord(s2[i])
+    if sum != 0:
+        return None
+
+    chars = {}
+    for i in range(len_s1):
+        c1 = s1[i]
+        c2 = s2[i]
+        if c1 in chars:
+            chars[c1] += 1
+        else:
+            chars[c1] = 1
+        if c2 in chars:
+            chars[c2] -= 1
+        else:
+            chars[c2] = -1
+    if any(chars.values()):
+        return None
+    return [i for i in range(len_s1) if s1[i] != s2[i]]
+
+def swap_two_letters(s1, s2, len_s1, len_s2):
+    if len_s1 != len_s2:
+        return None
+    swapped_index1 = None
+    swapped_index2 = None
+    for i in range(len_s1):
+        if s1[i] != s2[i]:
+            if swapped_index1 == None:
+                swapped_index1 = i
+            else:
+                if swapped_index2 != None or s1[swapped_index1] != s2[i] or s1[i] != s2[swapped_index1]:
+                    return None
+                swapped_index2 = i
+    if swapped_index2 == None:
+        return None
+    return (swapped_index1, swapped_index2)
+
 rules = {
-    anagram: None,
     change_first_letter: None,
     change_last_letter: None,
     change_letter: int,
@@ -124,5 +142,7 @@ rules = {
     add_letter: int,
     remove_first_letter: None,
     remove_last_letter: None,
-    remove_letter: int
+    remove_letter: int,
+    anagram: [int],
+    swap_two_letters: (int, int)
 }

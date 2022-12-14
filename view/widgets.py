@@ -1,6 +1,7 @@
 from tkinter import *
 from tkinter import ttk
 import threading
+import gc
 
 class Window(Tk):
     def __init__(self, title):
@@ -92,11 +93,13 @@ class ScrollbarFrame(Frame):
         self.scrollbar.set(lo, hi)
 
 class CheckBox(Checkbutton):
-    def __init__(self, parent, text, selected=False):
+    def __init__(self, parent, text, selected=False, on_tab=None):
         super().__init__(parent, text=text, command=self.on_switch, cursor="hand2")
         self.value = selected
         if selected:
             self.select()
+        if on_tab:
+            self.bind("<Tab>", on_tab)
 
     def on_switch(self):
         self.value = False if self.value else True
@@ -178,4 +181,5 @@ def clear_window(widget):
     window.unbind("<Button-1>")
     for child in window.winfo_children():
         child.destroy()
+    gc.collect() # Without this, garbage collector would cause "NotImplementedError: Call from another thread"
     return window

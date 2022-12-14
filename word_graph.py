@@ -119,6 +119,13 @@ def read_graph_rule(name, rule, words, detail_progress, stop_event):
             match_type = rules.rules[rule]
             if match_type == int:
                 adjacency_list.append((w1, w2, {"rule": rule, "match": unpack_int(file)}))
+            elif match_type == [int]:
+                match = []
+                for _ in range(unpack_int(file)):
+                    match.append(unpack_int(file))
+                adjacency_list.append((w1, w2, {"rule": rule, "match": match}))
+            elif match_type == (int, int):
+                adjacency_list.append((w1, w2, {"rule": rule, "match": (unpack_int(file), unpack_int(file))}))
             elif match_type == None:
                 adjacency_list.append((w1, w2, {"rule": rule, "match": True}))
             detail_progress.request_progress()
@@ -134,3 +141,10 @@ def write_graph_rule(name, rule, word_map, adjacency_list):
             match_type = rules.rules[rule]
             if match_type == int:
                 file.write(pack_int(match))
+            elif match_type == [int]:
+                file.write(pack_int(len(match)))
+                for i in match:
+                    file.write(pack_int(i))
+            elif match_type == (int, int):
+                file.write(pack_int(match[0]))
+                file.write(pack_int(match[1]))

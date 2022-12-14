@@ -19,10 +19,10 @@ class WordGraphFrame(ttk.Frame):
         self.frame = ttk.Frame(self, padding=0)
         self.frame.pack(fill=X)
         self.w1 = TextField(self.frame, on_tab=lambda _: focus(self.w2))
-        self.w2 = TextField(self.frame, on_tab=lambda _: focus(self.find_button))
-        self.remember_new = CheckBox(self, "ricorda parole nuove")
+        self.w2 = TextField(self.frame, on_tab=lambda _: focus(self.random_button))
+        self.remember_new = CheckBox(self, "ricorda parole nuove", on_tab=lambda _: focus(self.find_button))
         self.random_button_image = PhotoImage(file="assets/random.png")
-        self.random_button = Button(self.frame, None, image=self.random_button_image, command=self.random_words, width=40, height=40)
+        self.random_button = Button(self.frame, None, image=self.random_button_image, command=self.random_words, width=40, height=40, on_tab=lambda _: focus(self.remember_new))
         self.random_button.pack(side=RIGHT, anchor=NE, padx=(10,0))
         self.find_button = Button(self, "Trova", command=self.find_path, on_tab=lambda _: focus(self.back_button))
         self.result = ResultFrame(self, graph)
@@ -70,8 +70,11 @@ class ResultFrame(ttk.Frame):
     def _enter(self, event):
         for range, explanation in self.explanations.items():
             if self.result_label.get_index(event.x, event.y) in range:
-                if sum(len(part[0]) for part in explanation) <= 22:
+                details_len = sum(len(part[0]) for part in explanation)
+                if details_len <= 20:
                     self.details_label.set_text(explanation)
+                elif details_len <= 28:
+                    self.details_label.set_text(explanation, fontsize=20)
                 else:
                     self.details_label.set_text(explanation, fontsize=14)
                 self.result_label.config(cursor="hand2")
@@ -105,14 +108,12 @@ class ResultFrame(ttk.Frame):
         match = rule["match"]
 
         normal = None
-        moved = "#8B8000"
+        moved = "#ff7514"
         added = "green"
         removed = "red"
         to = (" → ", normal)
 
-        if function == rules.anagram:
-            return [(w1, moved), to, (w2, moved)]
-        elif function == rules.change_first_letter:
+        if function == rules.change_first_letter:
             return [(w1[0], removed), (w1[1:], normal), to, (w2[0], added), (w2[1:], normal)]
         elif function == rules.change_last_letter:
             return [(w1[:-1], normal), (w1[-1], removed), to, (w2[:-1], normal), (w2[-1], added)]
@@ -130,6 +131,13 @@ class ResultFrame(ttk.Frame):
             return [(w1[:-1], normal), (w1[-1], removed), to, (w2, normal)]
         elif function == rules.remove_letter:
             return [(w1[0:match], normal), (w1[match], removed), (w1[match+1:], normal), to, (w2, normal)]
+        elif function == rules.anagram:
+            return [(w1[i], moved if i in match else normal) for i in range(len(w1))] + [to] + [(w2[i], moved if i in match else normal) for i in range(len(w2))]
+        elif function == rules.swap_two_letters:
+            i1, i2 = match
+            return [(w1[0:i1], normal), (w1[i1], moved), (w1[i1+1:i2], normal), (w1[i2], moved), (w1[i2+1:], normal), to, (w2[0:i1], normal), (w2[i1], moved), (w2[i1+1:i2], normal), (w2[i2], moved), (w2[i2+1:], normal)]
+        else:
+            return []
 
 
 class MultiColorLabel(ttk.Frame):
