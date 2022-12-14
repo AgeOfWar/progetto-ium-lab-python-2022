@@ -33,7 +33,7 @@ class WordGraphFrame(ttk.Frame):
         self.find_button.pack(pady=10)
         self.result.pack(fill=BOTH, expand=True, pady=10)
         self.back_button.pack(side=BOTTOM, anchor=SE)
-        self.after(0, self.random_words)
+        self.random_words()
 
     def random_words(self):
         self.w1.set_text(self.graph.random_word())
@@ -45,9 +45,10 @@ class WordGraphFrame(ttk.Frame):
         w2 = self.w2.get().strip()
         paths = self.graph.find_paths(w1, w2, remember_new=self.remember_new.get())
         if paths == []:
-            self.result.show_path(None)
+            path = None
         else:
-            self.result.show_path(paths[0])
+            path = paths[0]
+        self.result.show_path(path)
 
     def back(self):
         window = clear_window(self)
@@ -61,7 +62,7 @@ class ResultFrame(ttk.Frame):
         self.explanations = {}
         self.result_label = TextArea(self, str(graph))
         self.details_label = MultiColorLabel(self)
-        self.result_label.pack()
+        self.result_label.pack(fill=X, expand=True, anchor=N)
         self.details_label.pack(side=BOTTOM)
         self.result_label.bind("<Motion>", self._enter)
         self.result_label.bind("<Leave>", self._leave)
@@ -69,7 +70,7 @@ class ResultFrame(ttk.Frame):
     def _enter(self, event):
         for range, explanation in self.explanations.items():
             if self.result_label.get_index(event.x, event.y) in range:
-                if sum(len(part[0]) for part in explanation) <= 24:
+                if sum(len(part[0]) for part in explanation) <= 22:
                     self.details_label.set_text(explanation)
                 else:
                     self.details_label.set_text(explanation, fontsize=14)
@@ -104,19 +105,19 @@ class ResultFrame(ttk.Frame):
         match = rule["match"]
 
         normal = None
-        changed = "#ff9966"
+        moved = "#8B8000"
         added = "green"
         removed = "red"
         to = (" → ", normal)
 
         if function == rules.anagram:
-            return [(w1, changed), to, (w2, changed)]
+            return [(w1, moved), to, (w2, moved)]
         elif function == rules.change_first_letter:
-            return [(w1[0], changed), (w1[1:], normal), to, (w2[0], changed), (w2[1:], normal)]
+            return [(w1[0], removed), (w1[1:], normal), to, (w2[0], added), (w2[1:], normal)]
         elif function == rules.change_last_letter:
-            return [(w1[:-1], normal), (w1[-1], changed), to, (w2[:-1], normal), (w2[-1], changed)]
+            return [(w1[:-1], normal), (w1[-1], removed), to, (w2[:-1], normal), (w2[-1], added)]
         elif function == rules.change_letter:
-            return [(w1[0:match], normal), (w1[match], changed), (w1[match+1:], normal), to, (w2[0:match], normal), (w2[match], changed), (w2[match+1:], normal)]
+            return [(w1[0:match], normal), (w1[match], removed), (w1[match+1:], normal), to, (w2[0:match], normal), (w2[match], added), (w2[match+1:], normal)]
         elif function == rules.add_first_letter:
             return [(w1, normal), to, (w2[0], added), (w2[1:], normal)]
         elif function == rules.add_last_letter:

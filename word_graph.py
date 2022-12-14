@@ -13,6 +13,7 @@ class WordGraph:
         graph = MultiDiGraph()
         graph.add_nodes_from(words)
         graph.add_edges_from(adjacency_list)
+        self.words = words
         self.graph = graph
         self.active_rules = active_rules
 
@@ -63,7 +64,7 @@ class WordGraph:
         return min((rule for rule in rules.values() if rule["rule"] in self.active_rules), key=lambda r: self.active_rules[r["rule"]], default=None)
 
     def random_word(self):
-        return random.choice(list(self.graph.nodes))
+        return random.choice(self.words)
 
 def generate_rule(words, rule, detail_progress, stop_event):
     detail_progress.request_reset()
