@@ -6,7 +6,7 @@ from view.widgets import *
 from view import word_graph_widget
 
 def setup_window(window, dictionary, graph, initial_words):
-    window.title("Parole - " + dictionary)
+    window.title("Parole - Impostazioni " + dictionary)
     window.geometry("600x400")
     window.minsize(600, 450)
     SettingsFrame(window, dictionary, graph, initial_words).pack(fill=BOTH, expand=True, padx=10, pady=10)
