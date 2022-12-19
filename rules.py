@@ -143,6 +143,36 @@ rules = {
     remove_first_letter: None,
     remove_last_letter: None,
     remove_letter: int,
-    anagram: [int],
-    swap_two_letters: (int, int)
+    swap_two_letters: (int, int),
+    anagram: [int]
 }
+
+def subsets(rule):
+    return {
+        change_first_letter: [],
+        change_last_letter: [],
+        change_letter: [change_first_letter, change_last_letter],
+        add_first_letter: [],
+        add_last_letter: [],
+        add_letter: [add_first_letter, add_last_letter],
+        remove_first_letter: [],
+        remove_last_letter: [],
+        remove_letter: [remove_first_letter, remove_last_letter],
+        swap_two_letters: [],
+        anagram: [swap_two_letters]
+    }[rule]
+
+def supersets(rule):
+    return {
+        change_first_letter: [change_letter],
+        change_last_letter: [change_letter],
+        change_letter: [],
+        add_first_letter: [add_letter],
+        add_last_letter: [add_letter],
+        add_letter: [],
+        remove_first_letter: [remove_letter],
+        remove_last_letter: [remove_letter],
+        remove_letter: [],
+        swap_two_letters: [anagram],
+        anagram: []
+    }[rule]

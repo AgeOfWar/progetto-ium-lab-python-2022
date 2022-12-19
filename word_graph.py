@@ -1,15 +1,14 @@
 from networkx import MultiDiGraph, all_shortest_paths, NetworkXNoPath
-import os
 import random
+import os
 
+from active_rules import *
 from dictionaries import *
 from files import *
 import rules
 
 class WordGraph:
-    def __init__(self, words, adjacency_list, active_rules=None):
-        if active_rules == None:
-            active_rules = dict.fromkeys(rules.rules, 1)
+    def __init__(self, words, adjacency_list, active_rules):
         graph = MultiDiGraph()
         graph.add_nodes_from(words)
         graph.add_edges_from(adjacency_list)
@@ -57,7 +56,7 @@ class WordGraph:
         return paths
 
     def _calculate_weight(self, w1, w2, rules):
-        return min((self.active_rules[rule["rule"]] for rule in rules.values() if rule["rule"] in self.active_rules), default=None)
+        return min((self.active_rules[rule["rule"]] for rule in rules.values() if self.active_rules[rule["rule"]] != None), default=None)
 
     def get_rule(self, w1, w2):
         rules = self.graph.get_edge_data(w1, w2)
@@ -65,6 +64,14 @@ class WordGraph:
 
     def random_word(self):
         return random.choice(self.words)
+
+    def random_example(self, rule, minlen=5, maxlen=6):
+        for w1, w2, match in self.graph.edges(data=True):
+            if len(w1) >= minlen and len(w1) <= maxlen and len(w2) >= minlen and len(w2) <= maxlen and match["rule"] == rule:
+                return (w1, w2)
+        return None
+
+
 
 def generate_rule(words, rule, detail_progress, stop_event):
     detail_progress.request_reset()
@@ -82,7 +89,7 @@ def generate_rule(words, rule, detail_progress, stop_event):
                     yield (w1, w2, {"rule": rule, "match": match})
         detail_progress.request_progress()
 
-def read_or_create_graph(name, progress, detail_progress, stop_event, active_rules=None):
+def read_or_create_graph(name, progress, detail_progress, stop_event):
     words, word_map = read_dictionary(name)
     adjacency_list = []
     progress.request_set_maximum(len(rules.rules))
@@ -92,6 +99,7 @@ def read_or_create_graph(name, progress, detail_progress, stop_event, active_rul
         progress.request_set_description(rule.__name__ + " ")
         adjacency_list += read_or_create_graph_rule(name, rule, words, word_map, detail_progress, stop_event)
         progress.request_progress()
+    active_rules = read_or_create_active_rules(name, dict.fromkeys(rules.rules, 1))
     return WordGraph(words, adjacency_list, active_rules)
 
 def read_or_create_graph_rule(name, rule, words, word_map, detail_progress, stop_event):

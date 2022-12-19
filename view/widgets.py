@@ -93,16 +93,21 @@ class ScrollbarFrame(Frame):
         self.scrollbar.set(lo, hi)
 
 class CheckBox(Checkbutton):
-    def __init__(self, parent, text, selected=False, on_tab=None):
-        super().__init__(parent, text=text, command=self.on_switch, cursor="hand2")
+    def __init__(self, parent, text, selected=False, on_tab=None, on_switch=None):
+        super().__init__(parent, text=text, command=self._on_switch, cursor="hand2")
         self.value = selected
+        self.on_switch = on_switch
         if selected:
             self.select()
+        else:
+            self.deselect()
         if on_tab:
             self.bind("<Tab>", on_tab)
 
-    def on_switch(self):
+    def _on_switch(self):
         self.value = False if self.value else True
+        if self.on_switch:
+            self.on_switch(self.value)
 
     def get(self):
         return self.value
@@ -128,6 +133,47 @@ class TextField(Text):
     def focus(self):
         super().focus()
         self.tag_add(SEL, "1.0", END)
+
+class IntField(ttk.Entry):
+    def __init__(self, parent, value=None, on_tab=None, width=None, validation=None):
+        super().__init__(parent, validate="key", validatecommand=(parent.register(self._validate), "%P"), width=width)
+        self.validation = validation
+        if on_tab:
+            self.bind("<Tab>", on_tab)
+        if value:
+            self.insert(END, str(value))
+    
+    def set_value(self, new_value):
+        if self.get() == new_value:
+            return
+        self.delete(0, END)
+        if new_value != None:
+            self.insert(0, str(new_value))
+
+    def get(self):
+        if super().get() == "":
+            return None
+        return int(super().get())
+
+    def focus(self):
+        super().focus()
+        self.tag_add(SEL, 0, END)
+    
+    def _validate(self, value_if_allowed):
+        if value_if_allowed:
+            try:
+                value = int(value_if_allowed)
+                if self.validation:
+                    return self.validation(value)
+                else:
+                    return True
+            except ValueError:
+                return False
+        else:
+            if self.validation:
+                return self.validation(None)
+            else:
+                return True
 
 class ProgressBar(Frame):
     def __init__(self, parent, function=None, on_complete=None, description=""):
