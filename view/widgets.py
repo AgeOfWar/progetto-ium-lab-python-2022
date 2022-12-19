@@ -95,7 +95,6 @@ class ScrollbarFrame(Frame):
 class CheckBox(Checkbutton):
     def __init__(self, parent, text, selected=False, on_tab=None, on_switch=None):
         super().__init__(parent, text=text, command=self._on_switch, cursor="hand2")
-        self.value = selected
         self.on_switch = on_switch
         if selected:
             self.select()
@@ -105,9 +104,17 @@ class CheckBox(Checkbutton):
             self.bind("<Tab>", on_tab)
 
     def _on_switch(self):
-        self.value = False if self.value else True
+        self.value = not self.value
         if self.on_switch:
             self.on_switch(self.value)
+
+    def select(self):
+        self.value = True
+        super().select()
+
+    def deselect(self):
+        self.value = False
+        super().deselect()
 
     def get(self):
         return self.value

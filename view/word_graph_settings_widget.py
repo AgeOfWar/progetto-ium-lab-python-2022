@@ -12,18 +12,18 @@ def setup_window(window, dictionary, graph, initial_words):
     SettingsFrame(window, dictionary, graph, initial_words).pack(fill=BOTH, expand=True, padx=10, pady=10)
 
 all_rules = {
-        rules.change_letter: "cambia una lettera",
-        rules.change_first_letter: "cambia la prima lettera",
-        rules.change_last_letter: "cambia l'ultima lettera",
-        rules.add_letter: "aggiungi una lettera",
-        rules.add_first_letter: "aggiungi una lettera all'inizio",
-        rules.add_last_letter: "aggiungi una lettera alla fine",
-        rules.remove_letter: "rimuovi una lettera",
-        rules.remove_first_letter: "rimuovi la prima lettera",
-        rules.remove_last_letter: "rimuovi l'ultima lettera",
-        rules.anagram: "anagramma",
-        rules.swap_two_letters: "scambia due lettere"
-    }
+    rules.change_letter: "cambia una lettera",
+    rules.change_first_letter: "cambia la prima lettera",
+    rules.change_last_letter: "cambia l'ultima lettera",
+    rules.add_letter: "aggiungi una lettera",
+    rules.add_first_letter: "aggiungi una lettera all'inizio",
+    rules.add_last_letter: "aggiungi una lettera alla fine",
+    rules.remove_letter: "rimuovi una lettera",
+    rules.remove_first_letter: "rimuovi la prima lettera",
+    rules.remove_last_letter: "rimuovi l'ultima lettera",
+    rules.anagram: "anagramma",
+    rules.swap_two_letters: "scambia due lettere"
+}
 
 class SettingsFrame(ttk.Frame):
     def __init__(self, parent, dictionary, graph, initial_words):
@@ -46,7 +46,7 @@ class SettingsFrame(ttk.Frame):
         Label(self.grid, "Esempio", fontsize=14).grid(row=0, column=1, sticky=W)
         Label(self.grid, "Peso", fontsize=14).grid(row=0, column=2, sticky=W)
         for index, rule in enumerate(all_rules):
-            self.checkboxes[rule].grid(row=index + 1, column=0, sticky=W, padx=(20,0) if len(rules.supersets(rule)) > 0 else 0)
+            self.checkboxes[rule].grid(row=index + 1, column=0, sticky=W, padx=(20,0) if len(rules.superrules(rule)) > 0 else 0)
             self.example_labels[rule].grid(row=index + 1, column=1, sticky=W)
             self.weight_fields[rule].grid(row=index + 1, column=2, sticky=W)
         self.actions_frame.pack(side=BOTTOM, fill=X)
@@ -59,18 +59,24 @@ class SettingsFrame(ttk.Frame):
             return True
         if value == None:
             self.checkboxes[rule].deselect()
+            for superrule in rules.superrules(rule):
+                self.weight_fields[superrule].set_value(None)
             return True
         if value < 1 or value > 999:
             return False
-        for super in rules.supersets(rule):
-            weight = self.weight_fields[super]
+        for superrule in rules.superrules(rule):
+            weight = self.weight_fields[superrule]
             if weight.get() != None:
                 weight.set_value(max(weight.get(), value))
-        for subset in rules.subsets(rule):
-            weight = self.weight_fields[subset]
+        for subrule in rules.subrules(rule):
+            weight = self.weight_fields[subrule]
             if weight.get() != None:
                 weight.set_value(min(weight.get(), value))
         self.checkboxes[rule].select()
+        for subrule in rules.subrules(rule):
+            weight = self.weight_fields[subrule]
+            if weight.get() == None:
+                weight.set_value(value)
         return True
 
     def _on_rule_switch(self, rule, value):

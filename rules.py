@@ -147,7 +147,7 @@ rules = {
     anagram: [int]
 }
 
-def subsets(rule):
+def subrules(rule):
     return {
         change_first_letter: [],
         change_last_letter: [],
@@ -162,7 +162,7 @@ def subsets(rule):
         anagram: [swap_two_letters]
     }[rule]
 
-def supersets(rule):
+def superrules(rule):
     return {
         change_first_letter: [change_letter],
         change_last_letter: [change_letter],
