@@ -8,6 +8,8 @@ def dictionary_path(name, *paths):
     return os.path.join(DICTIONARIES_PATH, name, *paths)
 
 def find_dictionaries():
+    if not os.path.isdir(DICTIONARIES_PATH):
+        return
     for name in os.listdir(DICTIONARIES_PATH):
         if os.path.isdir(dictionary_path(name)):
             words_path = dictionary_path(name, "words.dat")
