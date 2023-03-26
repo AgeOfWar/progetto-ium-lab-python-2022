@@ -19,7 +19,7 @@ class LoadingFrame(Frame):
         progress = ProgressBar(self, function=lambda p, stop_event: read_or_create_graph(dictionary, p, detail_progress, stop_event), on_complete=lambda graph: self.on_complete(dictionary, graph))
         progress.pack(anchor=W, fill=X, pady=5)
         detail_progress.pack(anchor=W, fill=X, pady=5)
-        Label(self,"\nQuesta operazione potrebbe richiedere diversi minuti\n\nPuoi tornare indietro in qualsiasi momento, il caricamento riprenderà da dove si è interrotto", justify=LEFT).pack(anchor=W, pady=5)
+        Label(self,"\nQuesta operazione potrebbe richiedere diversi minuti\n\nSe torni indietro il caricamento riprenderà da dove si è interrotto", justify=LEFT, wraplength=580).pack(anchor=W, pady=5)
         Button(self, "Indietro", command=self.back).pack(side=BOTTOM, anchor=E, pady=5)
 
     def on_complete(self, dictionary, graph):
