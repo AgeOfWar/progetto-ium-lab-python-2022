@@ -33,8 +33,8 @@ class Window(Tk):
             self.stop_event.set()
 
 class Label(Label):
-    def __init__(self, parent, text, fontsize=10, wraptext=False, cursor=None, color=None):
-        super().__init__(parent, text=text, font=("Montserrat", fontsize), cursor=cursor, fg=color)
+    def __init__(self, parent, text, justify=CENTER, fontsize=10, wraptext=False, cursor=None, color=None):
+        super().__init__(parent, text=text, font=("Montserrat", fontsize), cursor=cursor, fg=color, justify=justify)
         if wraptext:
             self.bind("<Configure>", lambda _: self.config(wraplength=self.winfo_width()))
     
