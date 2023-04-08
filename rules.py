@@ -147,6 +147,7 @@ rules = {
     anagram: [int]
 }
 
+# Y is a subrule of X if "Y implies X"
 def subrules(rule):
     return {
         change_first_letter: [],
@@ -162,6 +163,7 @@ def subrules(rule):
         anagram: [swap_two_letters]
     }[rule]
 
+# Y is a subrule of X if "X implies Y"
 def superrules(rule):
     return {
         change_first_letter: [change_letter],
